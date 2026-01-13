@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'soundRecognizer',
     'videoRecognizer',
     "imageRecognizer",
     "polls.apps.PollsConfig",

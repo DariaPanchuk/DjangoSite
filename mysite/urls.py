@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    path('soundRecognizer/', include('soundRecognizer.urls')),
     path('videoRecognizer/', include('videoRecognizer.urls')),
     path('imageRecognizer/', include("imageRecognizer.urls")),
     path("polls/", include("polls.urls")),
