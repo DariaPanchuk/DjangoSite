@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'videoRecognizer',
     "imageRecognizer",
     "polls.apps.PollsConfig",
     'django_cleanup.apps.CleanupConfig',
