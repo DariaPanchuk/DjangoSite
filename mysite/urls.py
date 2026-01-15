@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    path('codeRecognizer/', include('codeRecognizer.urls')),
     path('spectrumRecognizer/', include('spectrumRecognizer.urls')),
     path('soundRecognizer/', include('soundRecognizer.urls')),
     path('videoRecognizer/', include('videoRecognizer.urls')),

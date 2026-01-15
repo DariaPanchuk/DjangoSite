@@ -8,9 +8,16 @@ from tensorflow.keras.preprocessing import image as keras_image
 from collections import Counter
 from tensorflow.keras.applications import EfficientNetV2B0
 from tensorflow.keras.applications.efficientnet_v2 import preprocess_input, decode_predictions
-from deep_translator import GoogleTranslator  # <--- Імпорт перекладача
+from deep_translator import GoogleTranslator
 
-model = EfficientNetV2B0(weights='imagenet', include_top=True)
+_VIDEO_MODEL = None
+
+def get_model():
+    global _VIDEO_MODEL
+    if _VIDEO_MODEL is None:
+        print("Завантаження моделі EfficientNetV2B0...")
+        _VIDEO_MODEL = EfficientNetV2B0(weights='imagenet', include_top=True)
+    return _VIDEO_MODEL
 
 def download_video_temp(web_url):
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_videos')
@@ -20,10 +27,14 @@ def download_video_temp(web_url):
     output_path = os.path.join(temp_dir, filename)
 
     ydl_opts = {
-        'format': 'best[ext=mp4][height<=480]',
+        'format': 'best[ext=mp4][height<=720]/best[ext=mp4]/best',
         'outtmpl': output_path,
         'quiet': True,
         'noplaylist': True,
+        'geo_bypass': True,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        }
     }
 
     try:
@@ -44,9 +55,14 @@ def analyze_video_file(video_path):
     fps = cap.get(cv2.CAP_PROP_FPS)
     if fps == 0 or fps != fps: fps = 24
 
+    try:
+        model = get_model()
+    except Exception as e:
+        return f"Помилка завантаження моделі: {e}"
+
     found_objects = []
     frame_count = 0
-    process_interval = int(fps)  # 1 кадр на секунду
+    process_interval = int(fps)
 
     while True:
         ret, frame = cap.read()
@@ -68,7 +84,7 @@ def analyze_video_file(video_path):
                 print(f"Frame Error: {e}")
 
         frame_count += 1
-        if frame_count > fps * 120:  # Ліміт 2 хв
+        if frame_count > fps * 120:
             break
 
     cap.release()
@@ -77,7 +93,7 @@ def analyze_video_file(video_path):
         return "Нічого не знайдено"
 
     counts = Counter(found_objects)
-    most_common = counts.most_common(20)  # Топ-10 об'єктів
+    most_common = counts.most_common(20)
 
     translator = GoogleTranslator(source='auto', target='uk')
     translated_results = []
@@ -88,7 +104,6 @@ def analyze_video_file(video_path):
             ukr_text = translator.translate(clean_name)
             translated_results.append(f"{ukr_text} ({count})")
         except:
-            # Якщо переклад не вдався, лишаємо англійською
             translated_results.append(f"{clean_name} ({count})")
 
     return ", ".join(translated_results)

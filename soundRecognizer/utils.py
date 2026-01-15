@@ -4,17 +4,28 @@ import librosa
 import pandas as pd
 from deep_translator import GoogleTranslator
 
-model = hub.load('https://tfhub.dev/google/yamnet/1')
-class_map_path = model.class_map_path().numpy()
+_YAMNET_MODEL = None
+_CLASS_NAMES = None
 
-if isinstance(class_map_path, bytes):
-    class_map_path = class_map_path.decode('utf-8')
+def get_model_and_classes():
+    global _YAMNET_MODEL, _CLASS_NAMES
 
-class_names = pd.read_csv(class_map_path)['display_name'].tolist()
+    if _YAMNET_MODEL is None:
+        print("Завантаження моделі YAMNet... (це може зайняти час)")
+        _YAMNET_MODEL = hub.load('https://tfhub.dev/google/yamnet/1')
 
+        class_map_path = _YAMNET_MODEL.class_map_path().numpy()
+        if isinstance(class_map_path, bytes):
+            class_map_path = class_map_path.decode('utf-8')
+
+        _CLASS_NAMES = pd.read_csv(class_map_path)['display_name'].tolist()
+        print("Модель YAMNet завантажено!")
+
+    return _YAMNET_MODEL, _CLASS_NAMES
 
 def analyze_audio(file_path):
     try:
+        model, class_names = get_model_and_classes()
         wav_data, sample_rate = librosa.load(file_path, sr=16000, mono=True)
         max_val = np.max(np.abs(wav_data))
         if max_val > 0:

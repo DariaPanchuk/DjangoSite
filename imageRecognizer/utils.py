@@ -5,18 +5,18 @@ from deep_translator import GoogleTranslator
 from dotenv import load_dotenv
 
 load_dotenv()
-API_KEY = os.getenv("GOOGLE_API_KEY")
-
 
 def classify_image(img_path):
-    if not API_KEY:
+    api_key = os.getenv("GOOGLE_API_KEY")
+
+    if not api_key:
         return "Немає ключа API", 0.0
 
     try:
         with open(img_path, "rb") as image_file:
             base64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
-        url = f"https://vision.googleapis.com/v1/images:annotate?key={API_KEY}"
+        url = f"https://vision.googleapis.com/v1/images:annotate?key={api_key}"
 
         payload = {
             "requests": [
